@@ -1,7 +1,7 @@
 #############################
 #                           #
 # SPACEINVADERS MagNum      #
-# Author: Maciej Nalepa     #
+# Autor: Maciej Nalepa     #
 #                           #
 #############################
 
@@ -19,4 +19,3 @@ Pliki źródłowe:
 - leaderboard.txt - przechowuje wyniki z każdej rozgrywki
 
 Opracowano i przetestowano na Python 3.5.3 oraz pygame 1.9.4.
-Rozpowszechnianie plików źródłowych i ich zawartości jedynie za zgodą autora.
