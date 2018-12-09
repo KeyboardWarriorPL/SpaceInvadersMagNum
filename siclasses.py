@@ -24,7 +24,7 @@ class GameSystem:
         self.PROJECTILES = []
         self.MYSTERYCHANCE = Secret.DefaultChance
         self.MYSTERY = None
-        self.BONUSES = []
+        self.BONUSES = [ProfitAlwaysFire(50),ProfitSlowDown(100),ProfitExtraLife(),ProfitKillAll(),ProfitRebuildBases()]
         self.KEYMAP = KeyMapper([pygame.K_SPACE, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_RETURN, pygame.K_ESCAPE])
         self.IMAGES = {}
         self._setupSizes()
@@ -76,7 +76,7 @@ class GameSystem:
 
     def _setupSizes(self):
         nscale = (self.GRID.YBounds[1]-self.GRID.YBounds[0]) / self.GRID.Rows
-        fsc = lambda ds: ( int(nscale*ds[0]/max(ds)), int(nscale*ds[1]/max(ds)) )
+        fsc = lambda ds: ( int(nscale*ds[0]/40), int(nscale*ds[1]/40) )
         Projectile.DefaultSize = fsc(Projectile.DefaultSize)
         Player.DefaultSize = fsc(Player.DefaultSize)
         BreakableCover.DefaultSize = fsc(BreakableCover.DefaultSize)
@@ -204,11 +204,6 @@ def Pulsar(tempo=0.04):
 
 class Animation:
     def __init__(self, interface, gs, frames=60):
-        self.Text = None
-        self.Image = None
-        self.Pulsation = Pulsar()
-        self.UInterface = interface
-        self.GSystem = gs
         self.Frames = frames
         self._passed = 0
 
@@ -219,13 +214,6 @@ class Animation:
         if (self._passed>=self.Frames):
             raise StopIteration
         else:
-            p = (next(self.Pulsation)+1)/2
-            if self.Text!=None:
-                self.Text = (self.Text[0], self.Text[1], (self.Text[2][0]*p, self.Text[2][1]*p, self.Text[2][2]*p))
-                self.UInterface.newtext(*self.Text)
-            if self.Image!=None and self.Image in self.GSystem.IMAGES.keys():
-                self.GSystem.SCREEN.blit()
-            self._passed += 1
             return (self.Text, self.Image)
 
 class EventPauser:
@@ -239,7 +227,7 @@ class EventPauser:
 
 #Missiles classes
 class Projectile(Drawable):
-    DefaultSize = (4,12)
+    DefaultSize = (6,14)
     DefaultColor = (200,0,0)
     AlwaysHarmful = True
     
@@ -284,7 +272,7 @@ class Player(Drawable):
     def fire(self, gs):
         if self.CanFire:
             coords = gs.GRID.projection(self.X, self.Y)
-            pro = Projectile((coords[0] + self.Size[1]/2, coords[1]-1), True)
+            pro = Projectile((coords[0] + self.Size[1]/2, coords[1]-Projectile.DefaultSize[1]), True)
             pro.Paint = self.Paint
             gs.PROJECTILES.append(pro)
             self.CanFire = False
@@ -452,11 +440,64 @@ class Secret(Drawable):
 
     def destroy(self, gs):
         if len(gs.BONUSES)>0:
-            random.choice(gs.BONUSES).activate()
+            random.choice(gs.BONUSES).activate(gs)
         else:
             gs.SCORE += random.choice(self.Rewards)
         gs.MYSTERY = None
     
 class Bonus:
+    def __init__(self, dur):
+        self.Duration = dur
+        self.Active = False
+        self._passed = 0
+
+    def activate(self, gs):
+        if not self.Active:
+            self.Active = True
+            return True
+        return False
+    
+    def operate(self):
+        if self.Active:
+            self._passed += 1
+        if self._passed>self.Duration:
+            self.Active = False
+
+class ProfitAlwaysFire(Bonus):
+    def activate(self, gs):
+        if super().activate(gs):
+            return True
+        return False
+
+class ProfitSlowDown(Bonus):
+    def activate(self, gs):
+        if super().activate(gs):
+            return True
+        return False
+
+class ProfitKillAll(Bonus):
     def __init__(self):
-        print('ni ma! ha ha')
+        super().__init__(0)
+
+    def activate(self, gs):
+        if super().activate(gs):
+            return True
+        return False
+
+class ProfitRebuildBases(Bonus):
+    def __init__(self):
+        super().__init__(0)
+
+    def activate(self, gs):
+        if super().activate(gs):
+            return True
+        return False
+
+class ProfitExtraLife(Bonus):
+    def __init__(self):
+        super().__init__(0)
+
+    def activate(self, gs):
+        if super().activate(gs):
+            return True
+        return False
