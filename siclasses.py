@@ -29,7 +29,6 @@ class GameSystem:
             self.BONUSES.append(ProfitRebuildBases())
         self.KEYMAP = KeyMapper([pygame.K_SPACE, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_RETURN, pygame.K_ESCAPE])
         self.IMAGES = {}
-        self._setupSizes()
         self.load_images()
 
     def load_images(self):
@@ -53,6 +52,8 @@ class GameSystem:
         self.OPONNENTS.invade(self)
         for i in self.BASES:
             i.update(self)
+        for i in self.BONUSES:
+            i.operate(self)
 
     def _canfireTest(self):
         if len(self.PROJECTILES) >= 4:
@@ -196,7 +197,7 @@ class UserInterface:
     
     def gameover(self, gs):
         txt = self.newtext("GAME OVER", True, (240,0,0))
-        self.showtext(gs, txt, ((gs.RESOLUTION[0]//2)-txt.get_width()//2,(gs.RESOLUTION[0]//2)-txt.get_height()//2))
+        self.showtext(gs, txt, ((gs.RESOLUTION[0]//2)-txt.get_width()//2,(gs.RESOLUTION[1]//2)-txt.get_height()//2))
 
 def Pulsar(tempo=0.04):
     ms = 0.0
@@ -232,7 +233,7 @@ class EventPauser:
 
 #Missiles classes
 class Projectile(Drawable):
-    DefaultSize = (6,14)
+    DefaultSize = (4,12)
     DefaultColor = (200,0,0)
     AlwaysHarmful = True
     

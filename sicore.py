@@ -5,6 +5,7 @@ pygame.display.set_caption("MN's Space Invaders")
 from os.path import isfile
 from siclasses import *
 system = GameSystem()
+system._setupSizes()
 ui = UserInterface(64)
 fullscr = False
 
