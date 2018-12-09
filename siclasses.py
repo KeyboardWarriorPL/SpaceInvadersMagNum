@@ -27,6 +27,7 @@ class GameSystem:
         self.BONUSES = []
         self.KEYMAP = KeyMapper([pygame.K_SPACE, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_RETURN, pygame.K_ESCAPE])
         self.IMAGES = {}
+        self._setupSizes()
         self.load_images()
 
     def load_images(self):
@@ -72,6 +73,14 @@ class GameSystem:
             if (p.overlap(self.PLAYER,self) and p.Harmful):
                 self.PLAYER.kill(self)
                 self.PROJECTILES.remove(p)
+
+    def _setupSizes(self):
+        nscale = (self.GRID.YBounds[1]-self.GRID.YBounds[0]) / self.GRID.Rows
+        Projectile.DefaultSize = Projectile.DefaultSize 
+        Player.DefaultSize
+        BreakableCover.DefaultSize
+        Alien.DefaultSize
+        return
 
 class MapGrid:
     def __init__(self, res, rows):
@@ -263,7 +272,7 @@ class MissileHeavy(Projectile):
 
 #Player classes
 class Player(Drawable):
-    DefaultSize = (30,30)
+    DefaultSize = (40,40)
     DefaultColor = (20,150,20)
     DefaultImage = 'turret.png'
 
@@ -384,7 +393,7 @@ class EnemyCluster:
         self.fire(gs)
 
 class Alien(Drawable):
-    DefaultSize = (30,30)
+    DefaultSize = (40,40)
     DefaultColor = (250,200,200)
 
     def __init__(self, points, pos):
@@ -423,7 +432,6 @@ class Genius(Alien):
 
 #BONUS system
 class Secret(Drawable):
-    DefaultSize = (30,30)
     DefaultColor = (220,220,220)
     DefaultChance = 0.005
     GivesBonuses = True
@@ -433,7 +441,7 @@ class Secret(Drawable):
         self.Rewards = rws
         self.Speed = random.random() * 9 + 1
         self._direction = 1
-        super().__init__(pos, Secret.DefaultSize, Secret.DefaultColor, True, Secret.DefaultImage)
+        super().__init__(pos, Alien.DefaultSize, Secret.DefaultColor, True, Secret.DefaultImage)
 
     def fly(self, gs):
         if self.Size[0]+self.X>gs.GRID.XBounds[1]:
