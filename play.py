@@ -30,7 +30,7 @@ class OptionShifter:
         self.Freezer = (self.Freezer+1)%OptionShifter.DefaultFreezer
 
 class MenuSystem:
-    DefaultSETTINGS = [['mysteries','rarely'], ['speed','standard'], ['bases','medium'], ['blank shots','no'], ['bonuses','yes']]
+    DefaultSETTINGS = [['mysteries','rarely'], ['speed','standard'], ['bases','medium'], ['blank shots','no'], ['bonuses','some']]
 
     def __init__(self):
         self.SITE = 0
@@ -38,8 +38,8 @@ class MenuSystem:
         self.SETDICT = [list(pair) for pair in MenuSystem.DefaultSETTINGS]
         self.MOPS = OptionShifter(4)
         self.COPS = OptionShifter(6)
-        self._trank = [['yes', 'no'], ['none', 'small', 'medium', 'big'], ['low', 'standard', 'high'], ['never', 'rarely', 'quite often', 'often']]
-        self._tvalue = [[True, False], [None, (40,20), (60,40), (80,60)], [0.7, 1, 2], [0, 0.005, 0.01, 0.02]]
+        self._trank = [['none','some','only'], ['yes', 'no'], ['without', 'small', 'medium', 'big'], ['low', 'standard', 'high'], ['never', 'rarely', 'quite often', 'often']]
+        self._tvalue = [[0, 0.5, 1], [True, False], [None, (40,20), (60,40), (80,60)], [0.7, 1, 2], [0, 0.005, 0.01, 0.02]]
 
     def _convertrank(self):
         copy = {}
@@ -73,7 +73,7 @@ class MenuSystem:
             sicore.EnemyCluster.DefaultSpeed *= mods['speed']
             sicore.BreakableCover.DefaultSize = mods['bases']
             sicore.Projectile.AlwaysHarmful = not mods['blank shots']
-            sicore.Secret.GivesBonuses = mods['bonuses']
+            sicore.Secret.BonusesChance = mods['bonuses']
             return True
         return False
 

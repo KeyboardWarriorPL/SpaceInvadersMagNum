@@ -16,7 +16,7 @@ class GameSystem:
         self.GRID = MapGrid(resol, 10+5+2)
         self.GAMEOVER = False
         self.PLAYER = Player((resol[0]/2,self.GRID.Rows))
-        self.BASES = [BreakableCover((bcx-BreakableCover.DefaultSize[0]/2,resol[1]-Player.DefaultSize[1]*3.5)) for bcx in [resol[0]/5,resol[0]/2,resol[0]*0.8]] if BreakableCover.DefaultSize!=None else []
+        self._buildBases()
         self.SCORE = 0
         self.HIGHSCORE = 0
         self._clusterstart = 1
@@ -24,7 +24,9 @@ class GameSystem:
         self.PROJECTILES = []
         self.MYSTERYCHANCE = Secret.DefaultChance
         self.MYSTERY = None
-        self.BONUSES = [ProfitAlwaysFire(50),ProfitSlowDown(100),ProfitExtraLife(),ProfitKillAll(),ProfitRebuildBases()]
+        self.BONUSES = [ProfitAlwaysFire(50),ProfitSlowDown(100),ProfitExtraLife(),ProfitClearBoard()]
+        if BreakableCover.DefaultSize!=None:
+            self.BONUSES.append(ProfitRebuildBases())
         self.KEYMAP = KeyMapper([pygame.K_SPACE, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_RETURN, pygame.K_ESCAPE])
         self.IMAGES = {}
         self._setupSizes()
@@ -73,6 +75,9 @@ class GameSystem:
             if (p.overlap(self.PLAYER,self) and p.Harmful):
                 self.PLAYER.kill(self)
                 self.PROJECTILES.remove(p)
+
+    def _buildBases(self):
+        self.BASES = [BreakableCover((bcx-BreakableCover.DefaultSize[0]/2,self.RESOLUTION[1]-Player.DefaultSize[1]*3.5)) for bcx in [self.RESOLUTION[0]/5,self.RESOLUTION[0]/2,self.RESOLUTION[0]*0.8]] if BreakableCover.DefaultSize!=None else []
 
     def _setupSizes(self):
         nscale = (self.GRID.YBounds[1]-self.GRID.YBounds[0]) / self.GRID.Rows
@@ -325,14 +330,14 @@ class EnemyCluster:
         self.Enemies = [Genius((x*60,y)) for x in range(0,columns) for y in range(0,cluster[0])]+[Clever((x*60,y)) for x in range(0,columns) for y in range(cluster[0],cluster[0]+cluster[1])]+[Stupid((x*60,y)) for x in range(0,columns) for y in range(cluster[0]+cluster[1],cluster[0]+cluster[1]+cluster[2])]
         self._amount = len(self.Enemies)
         self._direction = 1
-        self.Speed = EnemyCluster.DefaultSpeed
+        self.Speed = 1
         self.move(pos)
 
     def __len__(self):
         return len(self.Enemies)
 
     def getSpeed(self):
-        return (((self._amount - len(self) + 1) / self._amount)**EnemyCluster.Coefficient) * EnemyCluster.SpeedTarget + self.Speed
+        return self.Speed * ( (((self._amount - len(self) + 1) / self._amount)**EnemyCluster.Coefficient) * EnemyCluster.SpeedTarget + EnemyCluster.DefaultSpeed )
 
     def move(self, step = (10,0)):
         for e in self.Enemies:
@@ -422,7 +427,7 @@ class Genius(Alien):
 class Secret(Drawable):
     DefaultColor = (220,220,220)
     DefaultChance = 0.005
-    GivesBonuses = True
+    BonusesChance = 0.5
     DefaultImage = 'secret.png'
 
     def __init__(self, pos, rws=[50,100,150]):
@@ -439,7 +444,7 @@ class Secret(Drawable):
         self.move((self._direction*self.Speed,0))
 
     def destroy(self, gs):
-        if len(gs.BONUSES)>0:
+        if len(gs.BONUSES)>0 and random.random()>Secret.BonusesChance:
             random.choice(gs.BONUSES).activate(gs)
         else:
             gs.SCORE += random.choice(self.Rewards)
@@ -449,6 +454,7 @@ class Bonus:
     def __init__(self, dur):
         self.Duration = dur
         self.Active = False
+        self.Finished = None
         self._passed = 0
 
     def activate(self, gs):
@@ -457,30 +463,41 @@ class Bonus:
             return True
         return False
     
-    def operate(self):
+    def operate(self, gs):
         if self.Active:
             self._passed += 1
         if self._passed>self.Duration:
             self.Active = False
+            if self.Finished!=None: self.Finished(gs)
 
 class ProfitAlwaysFire(Bonus):
-    def activate(self, gs):
-        if super().activate(gs):
-            return True
-        return False
+    def operate(self, gs):
+        if self.Active:
+            gs.PLAYER.CanFire = True
+        super().operate(gs)
 
 class ProfitSlowDown(Bonus):
+    def __init__(self, dur):
+        super().__init__(dur)
+        self.Finished = self.finish
+
     def activate(self, gs):
         if super().activate(gs):
+            gs.OPONNENTS.Speed = 0.25
             return True
         return False
 
-class ProfitKillAll(Bonus):
+    def finish(self, gs):
+        gs.OPONNENTS.Speed = 1
+
+class ProfitClearBoard(Bonus):
     def __init__(self):
         super().__init__(0)
 
     def activate(self, gs):
         if super().activate(gs):
+            for e in gs.OPONNENTS.Enemies:
+                e.destroy(gs)
             return True
         return False
 
@@ -490,6 +507,7 @@ class ProfitRebuildBases(Bonus):
 
     def activate(self, gs):
         if super().activate(gs):
+            gs._buildBases()
             return True
         return False
 
@@ -499,5 +517,6 @@ class ProfitExtraLife(Bonus):
 
     def activate(self, gs):
         if super().activate(gs):
+            gs.PLAYER.Lives += 1
             return True
         return False
