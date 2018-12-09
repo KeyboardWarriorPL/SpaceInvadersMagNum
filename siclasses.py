@@ -76,11 +76,11 @@ class GameSystem:
 
     def _setupSizes(self):
         nscale = (self.GRID.YBounds[1]-self.GRID.YBounds[0]) / self.GRID.Rows
-        Projectile.DefaultSize = Projectile.DefaultSize 
-        Player.DefaultSize
-        BreakableCover.DefaultSize
-        Alien.DefaultSize
-        return
+        fsc = lambda ds: ( int(nscale*ds[0]/max(ds)), int(nscale*ds[1]/max(ds)) )
+        Projectile.DefaultSize = fsc(Projectile.DefaultSize)
+        Player.DefaultSize = fsc(Player.DefaultSize)
+        BreakableCover.DefaultSize = fsc(BreakableCover.DefaultSize)
+        Alien.DefaultSize = fsc(Alien.DefaultSize)
 
 class MapGrid:
     def __init__(self, res, rows):
