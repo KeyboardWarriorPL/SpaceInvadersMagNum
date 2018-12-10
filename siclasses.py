@@ -213,19 +213,24 @@ class EventPauser:
         self.Message = msg
         puls = Pulsar(0.1)
         self.Animation = [next(puls) for x in range(0,dur)]
-        self._fontsize = 48
+        self._size = 48
+
+    def _convert(self, anim):
+        if self.Message is str:
+            tmp = UserInterface(anim * self._size).newtext(self.Message, clr=(0,250,0))
+            return tmp, (tmp.get_width(),tmp.get_height())
+        elif self.Message is pygame.Surface:
+            s = (a*self._size[0],a*self._size[1])
+            tmp = pygame.transform.scale(self.Message, s)
+            return tmp, s
+        else:
+            return str(self.Message), (0,0)
 
     def run(self, gs):
-        if self.Message is str:
-            conv = lambda x: x.newtext(self.Message, clr=(0,250,0))
-        elif self.Message is pygame.Surface:
-            conv = self.Message
-        else:
-            conv = str(self.Message)
         for a in self.Animation:
-            tmp = conv(UserInterface(self._fontsize * a)) if self.Message is str else conv
-            midpos = (40,40)
-            gs.SCREEN.blit(tmp, midpos)
+            tmp = self._convert(a)
+            midpos = (gs.RESOLUTION[0]/2-tmp[1][0], gs.RESOLUTION[1]/2-tmp[1][1])
+            gs.SCREEN.blit(tmp[0], midpos)
             pygame.display.flip()
             gs.CLOCK.tick(gs.FRAMERATE)
 
