@@ -216,20 +216,20 @@ class EventPauser:
         self._size = 48
 
     def _convert(self, anim):
-        if self.Message is str:
-            tmp = UserInterface(anim * self._size).newtext(self.Message, clr=(0,250,0))
+        if type(self.Message) is str:
+            tmp = UserInterface(int(anim * self._size)).newtext(self.Message, clr=(0,250,0))
             return tmp, (tmp.get_width(),tmp.get_height())
-        elif self.Message is pygame.Surface:
+        elif type(self.Message) is pygame.Surface:
             s = (a*self._size[0],a*self._size[1])
             tmp = pygame.transform.scale(self.Message, s)
             return tmp, s
         else:
-            return str(self.Message), (0,0)
+            return UserInterface(int(anim * self._size)).newtext(str(self.Message), clr=(250,0,0)), (0,0)
 
     def run(self, gs):
         for a in self.Animation:
             tmp = self._convert(a)
-            midpos = (gs.RESOLUTION[0]/2-tmp[1][0], gs.RESOLUTION[1]/2-tmp[1][1])
+            midpos = (gs.RESOLUTION[0]//2-tmp[1][0]//2, gs.RESOLUTION[1]//2-tmp[1][1]//2)
             gs.SCREEN.blit(tmp[0], midpos)
             pygame.display.flip()
             gs.CLOCK.tick(gs.FRAMERATE)
@@ -253,8 +253,9 @@ class Projectile(Drawable):
         else:
             self.Y += self.Speed / gs.FRAMERATE
 
-    def splash(self): #TO DO man!
-        return []
+    def splash(self):
+        rd = lambda: random.randint(-3*self.Strength,3*self.Strength)
+        return [Drawable((self.X+rd(),self.Y+rd()),(self.Strength,self.Strength),(0,0,0)) for r in range(0,4)]
 
 class MissileFast(Projectile):
     def __init__(self, start):
@@ -288,6 +289,8 @@ class Player(Drawable):
 
     def kill(self, gs):
         self.Lives -= 1
+        ep = EventPauser("Turret destroyed")
+        ep.run(gs)
         if self.Lives <= 0:
             gs.GAMEOVER = True
 
@@ -305,18 +308,22 @@ class BreakableCover:
         return len(self.Bricks)
 
     def update(self, gs):
+        dd = []
+        danger = []
+        lowrow = gs.OPONNENTS.limit()[3]
         for b in self.Bricks:
-            omit = False
             for pts in gs.PROJECTILES:
                 if pts.overlap(b, gs):
-                    self.Bricks.remove(b)
+                    dd.append(b)
+                    danger += pts.splash()
                     gs.PROJECTILES.remove(pts)
-                    omit = True
-            if omit or gs.OPONNENTS.limit()[3]<gs.GRID.Rows/2:
+            if lowrow<gs.GRID.Rows/1.5:
                 continue
             for op in gs.OPONNENTS.Enemies:
                 if op.overlap(b, gs):
-                    self.Bricks.remove(b)
+                    dd.append(b)
+        for b in set(dd):
+            self.Bricks.remove(b)
 
     def draw(self, gs):
         for b in self.Bricks:
