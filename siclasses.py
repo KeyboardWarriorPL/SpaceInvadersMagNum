@@ -208,26 +208,24 @@ def Pulsar(tempo=0.04):
         if ms>=1: dc = -1.0
         elif ms<=-1: dc = 1.0
 
-class Animation:
-    def __init__(self, interface, gs, frames=60):
-        self.Frames = frames
-        self._passed = 0
-
-    def __iter__(self):
-        return self
-
-    def __next__(self):
-        if (self._passed>=self.Frames):
-            raise StopIteration
-        else:
-            return (self.Text, self.Image)
-
 class EventPauser:
-    def __init__(self, anim):
-        self.Animation = anim
+    def __init__(self, msg, dur=50):
+        self.Message = msg
+        puls = Pulsar(0.1)
+        self.Animation = [next(puls) for x in range(0,dur)]
+        self._fontsize = 48
 
-    def start(self, gs):
-        for frame in self.Animation:
+    def run(self, gs):
+        if self.Message is str:
+            conv = lambda x: x.newtext(self.Message, clr=(0,250,0))
+        elif self.Message is pygame.Surface:
+            conv = self.Message
+        else:
+            conv = str(self.Message)
+        for a in self.Animation:
+            tmp = conv(UserInterface(self._fontsize * a)) if self.Message is str else conv
+            midpos = (40,40)
+            gs.SCREEN.blit(tmp, midpos)
             pygame.display.flip()
             gs.CLOCK.tick(gs.FRAMERATE)
 
@@ -431,7 +429,7 @@ class Secret(Drawable):
     BonusesChance = 0.5
     DefaultImage = 'secret.png'
 
-    def __init__(self, pos, rws=[50,100,150]):
+    def __init__(self, pos, rws=[50,100,150,300]):
         self.Rewards = rws
         self.Speed = random.random() * 9 + 1
         self._direction = 1
@@ -445,22 +443,24 @@ class Secret(Drawable):
         self.move((self._direction*self.Speed,0))
 
     def destroy(self, gs):
-        if len(gs.BONUSES)>0 and random.random()>Secret.BonusesChance:
+        if len(gs.BONUSES)>0 and random.random()<Secret.BonusesChance:
             random.choice(gs.BONUSES).activate(gs)
         else:
             gs.SCORE += random.choice(self.Rewards)
         gs.MYSTERY = None
     
 class Bonus:
-    def __init__(self, dur):
+    def __init__(self, dur, msg='Bonus', fin=None):
         self.Duration = dur
         self.Active = False
-        self.Finished = None
+        self.Finished = fin
+        self.Message = msg
         self._passed = 0
 
     def activate(self, gs):
         if not self.Active:
             self.Active = True
+            print(self.Message)
             return True
         return False
     
@@ -472,6 +472,9 @@ class Bonus:
             if self.Finished!=None: self.Finished(gs)
 
 class ProfitAlwaysFire(Bonus):
+    def __init__(self, dur):
+        super().__init__(dur, 'Turret fire limit removed')
+
     def operate(self, gs):
         if self.Active:
             gs.PLAYER.CanFire = True
@@ -479,8 +482,7 @@ class ProfitAlwaysFire(Bonus):
 
 class ProfitSlowDown(Bonus):
     def __init__(self, dur):
-        super().__init__(dur)
-        self.Finished = self.finish
+        super().__init__(dur, 'Hostiles slowing down', self.finish)
 
     def activate(self, gs):
         if super().activate(gs):
@@ -493,7 +495,7 @@ class ProfitSlowDown(Bonus):
 
 class ProfitClearBoard(Bonus):
     def __init__(self):
-        super().__init__(0)
+        super().__init__(0, 'Level cleared')
 
     def activate(self, gs):
         if super().activate(gs):
@@ -504,7 +506,7 @@ class ProfitClearBoard(Bonus):
 
 class ProfitRebuildBases(Bonus):
     def __init__(self):
-        super().__init__(0)
+        super().__init__(0, 'Bases restored')
 
     def activate(self, gs):
         if super().activate(gs):
@@ -514,7 +516,7 @@ class ProfitRebuildBases(Bonus):
 
 class ProfitExtraLife(Bonus):
     def __init__(self):
-        super().__init__(0)
+        super().__init__(0, 'Backup turret')
 
     def activate(self, gs):
         if super().activate(gs):
