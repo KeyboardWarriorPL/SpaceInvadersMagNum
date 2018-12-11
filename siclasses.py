@@ -31,6 +31,17 @@ class GameSystem:
         self.IMAGES = {}
         self.load_images()
 
+    def newFrame(self):
+        self.SCREEN.fill((0,0,0))
+        self.PLAYER.draw(self)
+        self.OPONNENTS.draw(self)
+        if self.MYSTERY!=None:
+            self.MYSTERY.draw(self)
+        for i in self.PROJECTILES:
+            i.draw(self)
+        for i in self.BASES:
+            i.draw(self)
+
     def load_images(self):
         imagestuple = [(f, os.path.join('resources', f)) for f in os.listdir('resources') if os.path.isfile(os.path.join('resources', f))]
         for t in imagestuple:
@@ -209,7 +220,7 @@ def Pulsar(tempo=0.04):
         elif ms<=-1: dc = 1.0
 
 class EventPauser:
-    def __init__(self, msg, dur=50):
+    def __init__(self, msg, dur=25):
         self.Message = msg
         puls = Pulsar(0.1)
         self.Animation = [next(puls) for x in range(0,dur)]
@@ -230,6 +241,7 @@ class EventPauser:
         for a in self.Animation:
             tmp = self._convert(a)
             midpos = (gs.RESOLUTION[0]//2-tmp[1][0]//2, gs.RESOLUTION[1]//2-tmp[1][1]//2)
+            gs.newFrame()
             gs.SCREEN.blit(tmp[0], midpos)
             pygame.display.flip()
             gs.CLOCK.tick(gs.FRAMERATE)
@@ -289,7 +301,7 @@ class Player(Drawable):
 
     def kill(self, gs):
         self.Lives -= 1
-        ep = EventPauser("Turret destroyed")
+        ep = EventPauser("TURRET LOST")
         ep.run(gs)
         if self.Lives <= 0:
             gs.GAMEOVER = True
@@ -298,7 +310,7 @@ class BreakableCover:
     DefaultSize = (60,40)
     DefaultColor = (20,150,20)
 
-    def __init__(self, pos):
+    def __init__(self, pos)
         pos = (pos[0], pos[1]-BreakableCover.DefaultSize[1]/2)
         self._position = pos
         self._bricksize = (6,6)
@@ -472,7 +484,8 @@ class Bonus:
     def activate(self, gs):
         if not self.Active:
             self.Active = True
-            print(self.Message)
+            ep = EventPauser(self.Message)
+            ep.run(gs)
             return True
         return False
     

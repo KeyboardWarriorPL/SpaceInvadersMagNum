@@ -24,11 +24,10 @@ def main(custom=False):
     while not system.GAMEOVER:
         for event in pygame.event.get():
             if event.type == pygame.QUIT: system.GAMEOVER = True
-        system.SCREEN.fill((0,0,0))
         if system.KEYMAP.controller(system):
             system.GAMEOVER = True
         system.refresh()
-        newFrame()
+        system.newFrame()
         ui.ingame(system)
         pygame.display.flip()
         system.CLOCK.tick(system.FRAMERATE)
@@ -44,16 +43,6 @@ def main(custom=False):
         ui.gameover(system)
         pygame.display.flip()
         system.CLOCK.tick(system.FRAMERATE)
-
-def newFrame():
-    system.PLAYER.draw(system)
-    system.OPONNENTS.draw(system)
-    if system.MYSTERY!=None:
-        system.MYSTERY.draw(system)
-    for i in system.PROJECTILES:
-        i.draw(system)
-    for i in system.BASES:
-        i.draw(system)
 
 if __name__=='__main__':
     main()
