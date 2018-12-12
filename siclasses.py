@@ -29,6 +29,7 @@ class GameSystem:
             self.BONUSES.append(ProfitRebuildBases())
         self.KEYMAP = KeyMapper([pygame.K_SPACE, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_RETURN, pygame.K_ESCAPE])
         self.IMAGES = {}
+        self.RENDERER = TempRenderer()
         self.load_images()
 
     def newFrame(self):
@@ -47,6 +48,7 @@ class GameSystem:
             i.draw(self)
         for i in self.BASES:
             i.draw(self)
+        self.RENDERER.render(self)
 
     def load_images(self):
         exts = ['.jpg','.png']
@@ -189,9 +191,9 @@ class Drawable:
             tmpimg.fill((240,10,10), special_flags=pygame.BLEND_MULT)
             if self._grid:
                 coords = gs.GRID.projection(self.X, self.Y)
-                gs.SCREEN.blit(tmpimg, (coords[0], coords[1]))
+                gs.RENDERER.add(tmpimg, (coords[0], coords[1]))
             else:
-                gs.SCREEN.blit(tmpimg, (self.X, self.Y))
+                gs.RENDERER.add(tmpimg, (self.X, self.Y))
 
 class UserInterface:
     def __init__(self, fsize):
@@ -231,6 +233,23 @@ def Pulsar(tempo=0.04):
         ms += tempo*dc
         if ms>=1: dc = -1.0
         elif ms<=-1: dc = 1.0
+
+class TempRenderer:
+    def __init__(self):
+        self.Temps = []
+
+    def __len__(self):
+        return len(self.Temps)
+
+    def add(self, img, pos, frames=8):
+        self.Temps.append([img, pos, frames])
+
+    def render(self, gs):
+        for i in self.Temps:
+            gs.SCREEN.blit(i[0], i[1])
+            i[2] -= 1
+            if i[2]<0:
+                self.Temps.remove(i)
 
 class EventPauser:
     def __init__(self, msg, dur=25):
@@ -315,10 +334,11 @@ class Player(Drawable):
             self.CanFire = False
 
     def kill(self, gs):
+        self.X = (gs.GRID.XBounds[1]-gs.GRID.XBounds[0])//2
         self.Lives -= 1
+        tmptext = UserInterface(48).newtext('TURRET LOST')
+        gs.RENDERER.add(tmptext, (gs.RESOLUTION[0]//2 - tmptext.get_width()//2, 120))
         self.explode(gs)
-        ep = EventPauser("TURRET LOST")
-        ep.run(gs)
         if self.Lives <= 0:
             gs.GAMEOVER = True
 
@@ -338,23 +358,19 @@ class BreakableCover:
 
     def _relativepos(self, d):
         tmp = d.Y-self._position[1]
-        if tmp<0:
-            tmp += d.Size[1]
         return (int(d.X-self._position[0]), int(tmp))
 
     def _rmhit(self, d, gs):
         rp = self._relativepos(d)
         for x in range(rp[0], rp[0]+d.Size[0]):
             for y in range(rp[1], rp[1]+d.Size[1]):
-                if x<0 or x>=len(self.Bricks):
-                    continue
-                if self.Bricks[x]==None:
+                if x<0 or x>=len(self.Bricks) or self.Bricks[x]==None:
                     break
                 if y<0 or y>=len(self.Bricks[x]):
                     continue
                 if self.Bricks[x][y]!=None:
                     self.Bricks[x][y] = None
-                    if type(d) in [Projectile, MissileFast, MissileHeavy]:
+                    if type(d) in [Projectile,MissileFast,MissileHeavy]:
                         spl = d.splash()
                         for s in spl:
                             self._rmhit(s,gs)
@@ -462,9 +478,9 @@ class Alien(Drawable):
         gs.PROJECTILES.append(protype((coords[0]+self.Size[0]/2, coords[1]+1+self.Size[1])))
 
     def destroy(self, gs):
+        self.explode(gs)
         gs.SCORE += self.Reward
         gs.OPONNENTS.Enemies.remove(self)
-        self.explode(gs)
 
 class Stupid(Alien):
     DefaultImage = 'stupid.png'
@@ -512,8 +528,8 @@ class Secret(Drawable):
             random.choice(gs.BONUSES).activate(gs)
         else:
             gs.SCORE += random.choice(self.Rewards)
-        gs.MYSTERY = None
         self.explode(gs)
+        gs.MYSTERY = None
     
 class Bonus:
     def __init__(self, dur, msg='Bonus', fin=None):
