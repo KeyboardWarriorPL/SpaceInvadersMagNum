@@ -259,9 +259,11 @@ class Projectile(Drawable):
         self.Speed = 300
         self.Strength = 1
         self.Harmful = True
+        self._y = start[1]
         super().__init__(start, Projectile.DefaultSize, Projectile.DefaultColor)
 
     def update(self, gs):
+        self._y = self.Y
         if self.PlayerOwned:
             self.Y -= self.Speed / gs.FRAMERATE
         else:
@@ -269,7 +271,7 @@ class Projectile(Drawable):
 
     def splash(self):
         rd = lambda: random.randint(-3*self.Strength,3*self.Strength)
-        return [Drawable((self.X+rd(),self.Y+rd()),(self.Strength,self.Strength),(0,0,0)) for r in range(0,4)]
+        return [Drawable((self.X+rd(),self.Y+rd()),(self.Strength,self.Strength),(0,0,0)) for r in range(0,4)] + [Drawable((self.X,self._y), (self.Size[0], self.Size[1]+abs(self.Y-self._y)), (0,0,0))]
 
 class MissileFast(Projectile):
     def __init__(self, start):
@@ -332,6 +334,8 @@ class BreakableCover:
         rp = self._relativepos(d)
         for x in range(rp[0], rp[0]+d.Size[0]):
             for y in range(rp[1], rp[1]+d.Size[1]):
+                if self.Bricks[x]==None:
+                    break
                 if self.Bricks[x][y]!=None:
                     self.Bricks[x][y] = None
                     if type(d) is Projectile:
@@ -351,10 +355,15 @@ class BreakableCover:
                 self._rmhit(p,gs)
 
     def draw(self, gs):
-        for x in self.Bricks:
-            for y in x:
+        for x in range(0,len(self.Bricks)):
+            if self.Bricks[x]==None:
+                continue
+            empty = True
+            for y in self.Bricks[x]:
                 if y!=None:
                     y.draw(gs)
+                    if empty: empty = False
+            if empty: self.Bricks[x] = None
 
 #ENEMIES CLASSES
 class EnemyCluster:
