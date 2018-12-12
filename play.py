@@ -38,8 +38,8 @@ class MenuSystem:
         self.SETDICT = [list(pair) for pair in MenuSystem.DefaultSETTINGS]
         self.MOPS = OptionShifter(4)
         self.COPS = OptionShifter(6)
-        self._trank = [['none','some','only'], ['yes', 'no'], ['without', 'small', 'medium', 'big'], ['low', 'standard', 'high'], ['never', 'rarely', 'quite often', 'often']]
-        self._tvalue = [[0, 0.5, 1], [True, False], [None, (40,20), (60,40), (80,60)], [0.7, 1, 2], [0, 0.005, 0.01, 0.02]]
+        self._trank = [['none','some','only'], ['yes', 'no'], ['without', 'small', 'medium', 'big'], ['low', 'standard', 'high', 'mad'], ['never', 'rarely', 'quite often', 'often']]
+        self._tvalue = [[0, 0.5, 1], [True, False], [None, (40,20), (60,40), (80,60)], [0.7, 1, 1.5, 2], [0, 0.005, 0.01, 0.02]]
 
     def _convertrank(self):
         copy = {}
