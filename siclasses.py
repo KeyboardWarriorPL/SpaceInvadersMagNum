@@ -24,7 +24,7 @@ class GameSystem:
         self.PROJECTILES = []
         self.MYSTERYCHANCE = Secret.DefaultChance
         self.MYSTERY = None
-        self.BONUSES = [ProfitAlwaysFire(50),ProfitSlowDown(100),ProfitExtraLife(),ProfitClearBoard()]
+        self.BONUSES = [ProfitAlwaysFire(150),ProfitSlowDown(150),ProfitExtraLife(),ProfitClearBoard()]
         if BreakableCover.DefaultSize!=None:
             self.BONUSES.append(ProfitRebuildBases())
         self.KEYMAP = KeyMapper([pygame.K_SPACE, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_RETURN, pygame.K_ESCAPE])
@@ -32,7 +32,13 @@ class GameSystem:
         self.load_images()
 
     def newFrame(self):
-        self.SCREEN.fill((0,0,0))
+        if 'background.jpg' in self.IMAGES:
+            sz = self.IMAGES['background.jpg'].get_size()
+            rt = self.RESOLUTION[1]/sz[1]
+            tmpimg = pygame.transform.scale(self.IMAGES['background.jpg'], (int(sz[0]*rt), int(sz[1]*rt)))
+            self.SCREEN.blit(tmpimg, (0,0))
+        else:
+            self.SCREEN.fill((0,0,0))
         self.PLAYER.draw(self)
         self.OPONNENTS.draw(self)
         if self.MYSTERY!=None:
@@ -67,12 +73,8 @@ class GameSystem:
             i.operate(self)
 
     def _canfireTest(self):
-        if len(self.PROJECTILES) >= 4:
-            self.PLAYER.CanFire = False
-            self.OPONNENTS.CanFire = False
-        else:
-            self.PLAYER.CanFire = len([x for x in self.PROJECTILES if x.PlayerOwned]) < 1
-            self.OPONNENTS.CanFire = len([x for x in self.PROJECTILES if not x.PlayerOwned]) < 3
+        self.PLAYER.CanFire = len([x for x in self.PROJECTILES if x.PlayerOwned]) < 1
+        self.OPONNENTS.CanFire = len([x for x in self.PROJECTILES if not x.PlayerOwned]) < 3
 
     def _projectileTest(self):
         for p in self.PROJECTILES:
@@ -267,7 +269,7 @@ class Projectile(Drawable):
 
     def splash(self):
         rd = lambda: random.randint(-3*self.Strength,3*self.Strength)
-        return [Drawable((self.X+rd(),self.Y+rd()),(self.Strength,self.Strength),(0,0,0)) for r in range(0,4)]
+        return [Drawable((self.X+rd(),self.Y+rd()),(self.Strength,self.Strength),(0,0,0)) for r in range(0,4)] + [self]
 
 class MissileFast(Projectile):
     def __init__(self, start):
@@ -310,36 +312,46 @@ class BreakableCover:
     DefaultSize = (60,40)
     DefaultColor = (20,150,20)
 
-    def __init__(self, pos)
+    def __init__(self, pos):
         pos = (pos[0], pos[1]-BreakableCover.DefaultSize[1]/2)
         self._position = pos
-        self._bricksize = (6,6)
-        self.Bricks = [Drawable((x+pos[0],y+pos[1]),self._bricksize,BreakableCover.DefaultColor) for x in range(0,BreakableCover.DefaultSize[0],self._bricksize[0]) for y in range(0,BreakableCover.DefaultSize[1],self._bricksize[1])]
+        self._bricksize = (1,1)
+        self._drawable = Drawable(pos,BreakableCover.DefaultSize,(0,0,0))
+        self.Bricks = [ [Drawable((x+pos[0],y+pos[1]),self._bricksize,BreakableCover.DefaultColor) for x in range(0,BreakableCover.DefaultSize[0],self._bricksize[0])] for y in range(0,BreakableCover.DefaultSize[1],self._bricksize[1]) ]
 
-    def __len__(self):
-        return len(self.Bricks)
+    def overlap(self, other, gs):
+        return self._drawable.overlap(other, gs)
+
+    def _relativepos(self, d):
+        return (int(d.X-self._position[0]), int(d.Y-self._position[1]))
+
+    def _rmhit(self, d, gs):
+        rp = self._relativepos(d)
+        for x in range(rp[0], rp[0]+d.Size[0]):
+            for y in range(rp[1], rp[1]+d.Size[1]):
+                if self.Bricks[x][y]!=None:
+                    self.Bricks[x][y] = None
+                    if type(d) is Projectile:
+                        spl = d.splash()
+                        for s in spl:
+                            self._rmhit(s,gs)
+                        gs.PROJECTILES.remove(d)
 
     def update(self, gs):
-        dd = []
-        danger = []
         lowrow = gs.OPONNENTS.limit()[3]
-        for b in self.Bricks:
-            for pts in gs.PROJECTILES:
-                if pts.overlap(b, gs):
-                    dd.append(b)
-                    danger += pts.splash()
-                    gs.PROJECTILES.remove(pts)
-            if lowrow<gs.GRID.Rows/1.5:
-                continue
-            for op in gs.OPONNENTS.Enemies:
-                if op.overlap(b, gs):
-                    dd.append(b)
-        for b in set(dd):
-            self.Bricks.remove(b)
+        if lowrow>gs.GRID.Rows/1.5:
+            for e in gs.OPONNENTS.Enemies:
+                if self.overlap(e,gs):
+                    self._rmhit(e,gs)
+        for p in gs.PROJECTILES:
+            if self.overlap(p,gs):
+                self._rmhit(p,gs)
 
     def draw(self, gs):
-        for b in self.Bricks:
-            b.draw(gs)
+        for x in self.Bricks:
+            for y in x:
+                if y!=None:
+                    y.draw(gs)
 
 #ENEMIES CLASSES
 class EnemyCluster:
@@ -410,7 +422,7 @@ class EnemyCluster:
 
 class Alien(Drawable):
     DefaultSize = (40,40)
-    DefaultColor = (250,200,200)
+    DefaultColor = (250,230,230)
 
     def __init__(self, points, pos):
         self.Reward = points
