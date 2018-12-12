@@ -269,7 +269,7 @@ class Projectile(Drawable):
 
     def splash(self):
         rd = lambda: random.randint(-3*self.Strength,3*self.Strength)
-        return [Drawable((self.X+rd(),self.Y+rd()),(self.Strength,self.Strength),(0,0,0)) for r in range(0,4)] + [self]
+        return [Drawable((self.X+rd(),self.Y+rd()),(self.Strength,self.Strength),(0,0,0)) for r in range(0,4)]
 
 class MissileFast(Projectile):
     def __init__(self, start):
@@ -317,13 +317,16 @@ class BreakableCover:
         self._position = pos
         self._bricksize = (1,1)
         self._drawable = Drawable(pos,BreakableCover.DefaultSize,(0,0,0))
-        self.Bricks = [ [Drawable((x+pos[0],y+pos[1]),self._bricksize,BreakableCover.DefaultColor) for x in range(0,BreakableCover.DefaultSize[0],self._bricksize[0])] for y in range(0,BreakableCover.DefaultSize[1],self._bricksize[1]) ]
+        self.Bricks = [ [Drawable((x+pos[0],y+pos[1]),self._bricksize,BreakableCover.DefaultColor) for y in range(0,1+BreakableCover.DefaultSize[1],self._bricksize[1])] for x in range(0,1+BreakableCover.DefaultSize[0],self._bricksize[0]) ]
 
     def overlap(self, other, gs):
         return self._drawable.overlap(other, gs)
 
     def _relativepos(self, d):
-        return (int(d.X-self._position[0]), int(d.Y-self._position[1]))
+        tmp = d.Y-self._position[1]
+        if tmp<0:
+            tmp += d.Size[1]
+        return (int(d.X-self._position[0]), int(tmp))
 
     def _rmhit(self, d, gs):
         rp = self._relativepos(d)
@@ -335,7 +338,7 @@ class BreakableCover:
                         spl = d.splash()
                         for s in spl:
                             self._rmhit(s,gs)
-                        gs.PROJECTILES.remove(d)
+                        if d in gs.PROJECTILES: gs.PROJECTILES.remove(d)
 
     def update(self, gs):
         lowrow = gs.OPONNENTS.limit()[3]
@@ -348,7 +351,6 @@ class BreakableCover:
                 self._rmhit(p,gs)
 
     def draw(self, gs):
-        self._drawable.draw(gs)
         for x in self.Bricks:
             for y in x:
                 if y!=None:
