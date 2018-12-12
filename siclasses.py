@@ -49,7 +49,8 @@ class GameSystem:
             i.draw(self)
 
     def load_images(self):
-        imagestuple = [(f, os.path.join('resources', f)) for f in os.listdir('resources') if os.path.isfile(os.path.join('resources', f))]
+        exts = ['.jpg','.png']
+        imagestuple = [(f, os.path.join('resources', f)) for f in os.listdir('resources') if os.path.isfile(os.path.join('resources', f)) and f[-4:] in exts]
         for t in imagestuple:
             self.IMAGES[str(t[0])] = pygame.image.load(t[1])
 
@@ -98,7 +99,6 @@ class GameSystem:
         fsc = lambda ds: ( int(nscale*ds[0]/40), int(nscale*ds[1]/40) )
         Projectile.DefaultSize = fsc(Projectile.DefaultSize)
         Player.DefaultSize = fsc(Player.DefaultSize)
-        BreakableCover.DefaultSize = fsc(BreakableCover.DefaultSize)
         Alien.DefaultSize = fsc(Alien.DefaultSize)
 
 class MapGrid:
@@ -181,6 +181,17 @@ class Drawable:
             else:
                 tmprect = pygame.Rect(self.X,self.Y,self.Size[0],self.Size[1])
             pygame.draw.rect(gs.SCREEN, self.Paint, tmprect)
+
+    def explode(self, gs):
+        exp = 'explode.png'
+        if exp in gs.IMAGES.keys():
+            tmpimg = pygame.transform.scale(gs.IMAGES[exp], self.Size)
+            tmpimg.fill((240,10,10), special_flags=pygame.BLEND_MULT)
+            if self._grid:
+                coords = gs.GRID.projection(self.X, self.Y)
+                gs.SCREEN.blit(tmpimg, (coords[0], coords[1]))
+            else:
+                gs.SCREEN.blit(tmpimg, (self.X, self.Y))
 
 class UserInterface:
     def __init__(self, fsize):
@@ -271,7 +282,7 @@ class Projectile(Drawable):
 
     def splash(self):
         rd = lambda: random.randint(-3*self.Strength,3*self.Strength)
-        return [Drawable((self.X+rd(),self.Y+rd()),(self.Strength,self.Strength),(0,0,0)) for r in range(0,4)] + [Drawable((self.X,self._y), (self.Size[0], self.Size[1]+abs(self.Y-self._y)), (0,0,0))]
+        return [Drawable((self.X+rd(),self.Y+rd()),(self.Strength,self.Strength),(0,0,0)) for r in range(0,6)]
 
 class MissileFast(Projectile):
     def __init__(self, start):
@@ -305,6 +316,7 @@ class Player(Drawable):
 
     def kill(self, gs):
         self.Lives -= 1
+        self.explode(gs)
         ep = EventPauser("TURRET LOST")
         ep.run(gs)
         if self.Lives <= 0:
@@ -319,7 +331,7 @@ class BreakableCover:
         self._position = pos
         self._bricksize = (1,1)
         self._drawable = Drawable(pos,BreakableCover.DefaultSize,(0,0,0))
-        self.Bricks = [ [Drawable((x+pos[0],y+pos[1]),self._bricksize,BreakableCover.DefaultColor) for y in range(0,1+BreakableCover.DefaultSize[1],self._bricksize[1])] for x in range(0,1+BreakableCover.DefaultSize[0],self._bricksize[0]) ]
+        self.Bricks = [ [Drawable((x+pos[0],y+pos[1]),self._bricksize,BreakableCover.DefaultColor) for y in range(0,BreakableCover.DefaultSize[1],self._bricksize[1])] for x in range(0,BreakableCover.DefaultSize[0],self._bricksize[0]) ]
 
     def overlap(self, other, gs):
         return self._drawable.overlap(other, gs)
@@ -334,11 +346,15 @@ class BreakableCover:
         rp = self._relativepos(d)
         for x in range(rp[0], rp[0]+d.Size[0]):
             for y in range(rp[1], rp[1]+d.Size[1]):
+                if x<0 or x>=len(self.Bricks):
+                    continue
                 if self.Bricks[x]==None:
                     break
+                if y<0 or y>=len(self.Bricks[x]):
+                    continue
                 if self.Bricks[x][y]!=None:
                     self.Bricks[x][y] = None
-                    if type(d) is Projectile:
+                    if type(d) in [Projectile, MissileFast, MissileHeavy]:
                         spl = d.splash()
                         for s in spl:
                             self._rmhit(s,gs)
@@ -346,7 +362,7 @@ class BreakableCover:
 
     def update(self, gs):
         lowrow = gs.OPONNENTS.limit()[3]
-        if lowrow>gs.GRID.Rows/1.5:
+        if lowrow>gs.GRID.Rows/2:
             for e in gs.OPONNENTS.Enemies:
                 if self.overlap(e,gs):
                     self._rmhit(e,gs)
@@ -448,6 +464,7 @@ class Alien(Drawable):
     def destroy(self, gs):
         gs.SCORE += self.Reward
         gs.OPONNENTS.Enemies.remove(self)
+        self.explode(gs)
 
 class Stupid(Alien):
     DefaultImage = 'stupid.png'
@@ -496,6 +513,7 @@ class Secret(Drawable):
         else:
             gs.SCORE += random.choice(self.Rewards)
         gs.MYSTERY = None
+        self.explode(gs)
     
 class Bonus:
     def __init__(self, dur, msg='Bonus', fin=None):
