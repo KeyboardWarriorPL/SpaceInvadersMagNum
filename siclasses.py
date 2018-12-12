@@ -364,14 +364,14 @@ class BreakableCover:
     def overlap(self, other, gs):
         return self._drawable.overlap(other, gs)
 
-    def _relativepos(self, d):
+    def _relativepos(self, d, gs):
         if d._grid:
-            c = gs.GRID.projection(self.X, self.Y)
+            c = gs.GRID.projection(d.X, d.Y)
             return (int(c[0]-self._position[0]), int(c[1]-self._position[1]))
         return (int(d.X-self._position[0]), int(d.Y-self._position[1]))
 
     def _rmhit(self, d, gs):
-        rp = self._relativepos(d)
+        rp = self._relativepos(d, gs)
         for x in range(rp[0], rp[0]+d.Size[0]):
             for y in range(rp[1], rp[1]+d.Size[1]):
                 if x<0 or x>=len(self.Bricks) or self.Bricks[x]==None:
