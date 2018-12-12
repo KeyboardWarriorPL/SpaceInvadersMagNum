@@ -188,7 +188,7 @@ class Drawable:
         exp = 'explode.png'
         if exp in gs.IMAGES.keys():
             tmpimg = pygame.transform.scale(gs.IMAGES[exp], self.Size)
-            tmpimg.fill((240,10,10), special_flags=pygame.BLEND_MULT)
+            tmpimg.fill((0,210,210), special_flags=pygame.BLEND_MULT)
             if self._grid:
                 coords = gs.GRID.projection(self.X, self.Y)
                 gs.RENDERER.add(tmpimg, (coords[0], coords[1]))
@@ -306,15 +306,21 @@ class Projectile(Drawable):
         return [Drawable((self.X+rd(),self.Y+rd()),(self.Strength,self.Strength),(0,0,0)) for r in range(0,6)]
 
 class MissileFast(Projectile):
+    DefaultColor = (0,250,250)
+
     def __init__(self, start):
         super().__init__(start, False)
         self.Speed *= 1.5
+        self.Paint = MissileFast.DefaultColor
 
 class MissileHeavy(Projectile):
+    DefaultColor = (250,250,0)
+
     def __init__(self, start):
         super().__init__(start, False)
         self.Speed *= 1.5
         self.Strength *= 2
+        self.Paint = MissileHeavy.DefaultColor
 
 #Player classes
 class Player(Drawable):
@@ -359,8 +365,10 @@ class BreakableCover:
         return self._drawable.overlap(other, gs)
 
     def _relativepos(self, d):
-        tmp = d.Y-self._position[1]
-        return (int(d.X-self._position[0]), int(tmp))
+        if d._grid:
+            c = gs.GRID.projection(self.X, self.Y)
+            return (int(c[0]-self._position[0]), int(c[1]-self._position[1]))
+        return (int(d.X-self._position[0]), int(d.Y-self._position[1]))
 
     def _rmhit(self, d, gs):
         rp = self._relativepos(d)
@@ -430,9 +438,8 @@ class EnemyCluster:
 
     def limit(self):
         if len(self)>0:
-            l = [e.X for e in self.Enemies]
-            t = [e.Y for e in self.Enemies]
-            return (min(l), max(l), min(t), max(t))
+            l = [[e.X for e in self.Enemies],[e.Y for e in self.Enemies]]
+            return (min(l[0]), max(l[0]), min(l[1]), max(l[1]))
         else:
             return (0,0,0,0)
 
@@ -529,7 +536,10 @@ class Secret(Drawable):
         if len(gs.BONUSES)>0 and random.random()<Secret.BonusesChance:
             random.choice(gs.BONUSES).activate(gs)
         else:
-            gs.SCORE += random.choice(self.Rewards)
+            bs = random.choice(self.Rewards)
+            gs.SCORE += bs
+            ep = EventPauser('+{0}'.format(bs))
+            ep.run(gs)
         self.explode(gs)
         gs.MYSTERY = None
     
