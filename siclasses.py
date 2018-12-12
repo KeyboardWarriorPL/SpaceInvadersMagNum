@@ -241,7 +241,7 @@ class TempRenderer:
     def __len__(self):
         return len(self.Temps)
 
-    def add(self, img, pos, frames=8):
+    def add(self, img, pos, frames=4):
         self.Temps.append([img, pos, frames])
 
     def render(self, gs):
@@ -252,8 +252,9 @@ class TempRenderer:
                 self.Temps.remove(i)
 
 class EventPauser:
-    def __init__(self, msg, dur=25):
+    def __init__(self, msg, dur=25, clr=(0,250,0)):
         self.Message = msg
+        self.Color = clr
         puls = Pulsar(0.1)
         self.Animation = [next(puls) for x in range(0,dur)]
         self._size = 48
@@ -263,7 +264,8 @@ class EventPauser:
             tmp = UserInterface(int(anim * self._size)).newtext(self.Message, clr=(0,250,0))
             return tmp, (tmp.get_width(),tmp.get_height())
         elif type(self.Message) is pygame.Surface:
-            s = (a*self._size[0],a*self._size[1])
+            a = self.Message.get_size()
+            s = (a*self._size, a*self._size)
             tmp = pygame.transform.scale(self.Message, s)
             return tmp, s
         else:
@@ -336,9 +338,9 @@ class Player(Drawable):
     def kill(self, gs):
         self.X = (gs.GRID.XBounds[1]-gs.GRID.XBounds[0])//2
         self.Lives -= 1
-        tmptext = UserInterface(48).newtext('TURRET LOST')
-        gs.RENDERER.add(tmptext, (gs.RESOLUTION[0]//2 - tmptext.get_width()//2, 120))
         self.explode(gs)
+        ep = EventPauser('TURRET DESTROYED',clr=(250,0,0))
+        ep.run(gs)
         if self.Lives <= 0:
             gs.GAMEOVER = True
 
