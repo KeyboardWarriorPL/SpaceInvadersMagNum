@@ -348,6 +348,7 @@ class BreakableCover:
                 self._rmhit(p,gs)
 
     def draw(self, gs):
+        self._drawable.draw(gs)
         for x in self.Bricks:
             for y in x:
                 if y!=None:
