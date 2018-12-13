@@ -1,4 +1,5 @@
 import pygame
+pygame.mixer.pre_init(44100, 16, 2, 4096)
 pygame.init()
 pygame.display.set_caption("MN's Space Invaders")
 
