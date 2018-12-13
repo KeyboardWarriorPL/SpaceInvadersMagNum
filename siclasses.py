@@ -109,19 +109,18 @@ class AudioPlayer:
 
     def __init__(self):
         self.Sounds = {}
-        exts = ['.mp3','.wav']
+        self._backtrack = 'SIbacktrack.wav'
+        exts = ['.wav']
         soundtuple = [(f, os.path.join('resources', f)) for f in os.listdir('resources') if os.path.isfile(os.path.join('resources', f)) and f[-4:] in exts]
         for t in soundtuple:
             self.Sounds[str(t[0])] = pygame.mixer.Sound(t[1])
 
     def music(self):
-        track = 'SIbacktrack.mp3'
-        if AudioPlayer.AudioEnabled and track in self.Sounds:
-            pygame.mixer.music.load(track)
-            pygame.mixer.music.play(-1)
+        if AudioPlayer.AudioEnabled and self._backtrack in self.Sounds:
+            self.Sounds[self._backtrack].play(-1)
 
     def stopmusic(self):
-        pygame.mixer.music.stop()
+        self.Sounds[self._backtrack].stop()
 
     def play(self, nm):
         if AudioPlayer.AudioEnabled and nm in self.Sounds:

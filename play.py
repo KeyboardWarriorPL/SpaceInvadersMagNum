@@ -1,6 +1,6 @@
 import pygame
 import sicore
-from os.path import isfile
+from os.path import isfile,join
 import sys
 
 if (len(sys.argv)>1 and sys.argv[1]=='fullscreen'):
@@ -89,6 +89,7 @@ def loadLeader():
 
 def main():
     global localmsys
+    SOUNDicon = [pygame.image.load(join('resources','soundon.png')), pygame.image.load(join('resources','soundoff.png'))]
     localmsys = MenuSystem()
     kmap = [{pygame.K_UP:(lambda a:localmsys.MOPS.shiftup()), pygame.K_DOWN:(lambda a:localmsys.MOPS.shiftdown()), pygame.K_RETURN:(lambda a:localmsys.switchsite())},
         {pygame.K_UP:(lambda a:localmsys.COPS.shiftup()), pygame.K_DOWN:(lambda a:localmsys.COPS.shiftdown()), pygame.K_RETURN:(lambda a:localmsys.switchsetting())}]
@@ -103,7 +104,7 @@ def main():
             if localmsys.SITE==0: EXITING = True
             else: localmsys.SITE = 0
         if localmsys.SITE==0:
-            drawmenu(localmsys.MOPS, 10*next(pulse))
+            drawmenu(localmsys.MOPS, 10*next(pulse), SOUNDicon[0 if sicore.AudioPlayer.AudioEnabled else 1])
         elif localmsys.SITE==1: 
             localmsys.SITE = 0
             sicore.main(localmsys.loadCustom())
@@ -119,6 +120,7 @@ def main():
                 localmsys.setoption()
         elif localmsys.SITE==4:
             sicore.AudioPlayer.AudioEnabled = not sicore.AudioPlayer.AudioEnabled
+            localmsys.SITE = 0
         elif localmsys.SITE==5:
             EXITING = True
         pygame.display.flip()
@@ -194,7 +196,9 @@ def drawcustomise(ops, setdc):
     for e in elems:
         UI.showtext(sicore.system, e[0], e[1])
 
-def drawmenu(ops, pulse):
+def drawmenu(ops, pulse, soundstate=None):
+    if soundstate!=None:
+        sicore.system.SCREEN.blit(soundstate, (sicore.system.RESOLUTION[0]-soundstate.get_width(),sicore.system.RESOLUTION[1]-soundstate.get_height()))
     selected = (250,250,250)
     unselected = (140,140,140)
     title = (30,240,30)
