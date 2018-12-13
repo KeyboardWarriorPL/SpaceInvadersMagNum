@@ -196,7 +196,7 @@ def drawmenu(ops, pulse):
     selected = (250,250,250)
     unselected = (140,140,140)
     title = (30,240,30)
-    opts = [unselected]*4
+    opts = [unselected]*5
     opts[ops.Pointer] = selected
     UI = sicore.UserInterface(72)
     UI.addsysfont(90)
@@ -210,7 +210,7 @@ def drawmenu(ops, pulse):
     elems.append( (tmp, (w-tmp.get_width()/2,h+pulse)) )
     h += 30
     row = 0
-    for t in ['play','leaderboards','customise','exit']:
+    for t in ['play','leaderboards','customise','sound','exit']:
         tmp = UI.newtext(t, clr=opts[row])
         h += tmp.get_height()+20
         elems.append( (tmp, (w-tmp.get_width()/2,h)) )

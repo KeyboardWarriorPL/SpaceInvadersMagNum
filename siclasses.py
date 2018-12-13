@@ -30,6 +30,7 @@ class GameSystem:
         self.KEYMAP = KeyMapper([pygame.K_SPACE, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_RETURN, pygame.K_ESCAPE])
         self.IMAGES = {}
         self.RENDERER = TempRenderer()
+        self.AUDIO = AudioPlayer()
         self.load_images()
 
     def newFrame(self):
@@ -102,6 +103,29 @@ class GameSystem:
         Projectile.DefaultSize = fsc(Projectile.DefaultSize)
         Player.DefaultSize = fsc(Player.DefaultSize)
         Alien.DefaultSize = fsc(Alien.DefaultSize)
+
+class AudioPlayer:
+    AudioEnabled = True
+
+    def __init__(self, enabled):
+        self.Sounds = {}
+        exts = ['.mp3','.wav']
+        soundtuple = [(f, os.path.join('resources', f)) for f in os.listdir('resources') if os.path.isfile(os.path.join('resources', f)) and f[-4:] in exts]
+        for t in soundtuple:
+            self.Sounds[str(t[0])] = pygame.mixer.Sound(t[1])
+
+    def music(self):
+        track = 'SIbacktrack.mp3'
+        if AudioPlayer.AudioEnabled and track in self.Sounds:
+            pygame.mixer.music.load(track)
+            pygame.mixer.music.play(-1)
+
+    def stopmusic(self):
+        pygame.mixer.music.stop()
+
+    def play(self, nm):
+        if AudioPlayer.AudioEnabled and nm in self.Sounds:
+            self.Sounds[nm].play()
 
 class MapGrid:
     def __init__(self, res, rows):

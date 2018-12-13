@@ -21,6 +21,7 @@ def main(custom=False):
         if len(lb)>0: system.HIGHSCORE = max([int(i) for i in lb])
     else:
         lb = []
+    system.AUDIO.music()
     while not system.GAMEOVER:
         for event in pygame.event.get():
             if event.type == pygame.QUIT: system.GAMEOVER = True
@@ -31,6 +32,7 @@ def main(custom=False):
         ui.ingame(system)
         pygame.display.flip()
         system.CLOCK.tick(system.FRAMERATE)
+    system.AUDIO.stopmusic()
     EXITING = False
     lb.append(("0" if custom else "")+str(system.SCORE)+"\n")
     with open('leaderboard.txt','w') as f:
