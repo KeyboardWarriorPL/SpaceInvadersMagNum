@@ -107,7 +107,7 @@ class GameSystem:
 class AudioPlayer:
     AudioEnabled = True
 
-    def __init__(self, enabled):
+    def __init__(self):
         self.Sounds = {}
         exts = ['.mp3','.wav']
         soundtuple = [(f, os.path.join('resources', f)) for f in os.listdir('resources') if os.path.isfile(os.path.join('resources', f)) and f[-4:] in exts]
@@ -369,6 +369,7 @@ class Player(Drawable):
         self.X = (gs.GRID.XBounds[1]-gs.GRID.XBounds[0])//2
         self.Lives -= 1
         self.explode(gs)
+        gs.AUDIO.play('lazer-gun.wav')
         ep = EventPauser('TURRET DESTROYED',clr=(250,0,0))
         ep.run(gs)
         if self.Lives <= 0:
@@ -512,6 +513,7 @@ class Alien(Drawable):
 
     def destroy(self, gs):
         self.explode(gs)
+        gs.AUDIO.play('lazer-gun.wav')
         gs.SCORE += self.Reward
         gs.OPONNENTS.Enemies.remove(self)
 
@@ -565,6 +567,7 @@ class Secret(Drawable):
             ep = EventPauser('+{0}'.format(bs))
             ep.run(gs)
         self.explode(gs)
+        gs.AUDIO.play('lazer-gun.wav')
         gs.MYSTERY = None
     
 class Bonus:

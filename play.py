@@ -118,6 +118,8 @@ def main():
             else:
                 localmsys.setoption()
         elif localmsys.SITE==4:
+            sicore.AudioPlayer.AudioEnabled = not sicore.AudioPlayer.AudioEnabled
+        elif localmsys.SITE==5:
             EXITING = True
         pygame.display.flip()
         sicore.system.CLOCK.tick(sicore.system.FRAMERATE)
