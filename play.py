@@ -13,21 +13,16 @@ class OptionShifter:
     def __init__(self, opts):
         self.Pointer = 0
         self.Options = opts
-        self.Freezer = 0
 
     def shiftdown(self):
-        if self.Freezer==0:
-            self.Pointer += 1
-            if self.Pointer >= self.Options:
-                self.Pointer = 0
-        self.Freezer = (self.Freezer+1)%OptionShifter.DefaultFreezer
+        self.Pointer += 1
+        if self.Pointer >= self.Options:
+            self.Pointer = 0
 
     def shiftup(self):
-        if self.Freezer==0:
-            self.Pointer -= 1
-            if self.Pointer < 0:
-                self.Pointer = self.Options-1
-        self.Freezer = (self.Freezer+1)%OptionShifter.DefaultFreezer
+        self.Pointer -= 1
+        if self.Pointer < 0:
+            self.Pointer = self.Options-1
 
 class MenuSystem:
     DefaultSETTINGS = [['mysteries','rarely'], ['speed','standard'], ['bases','medium'], ['blank shots','no'], ['bonuses','some']]

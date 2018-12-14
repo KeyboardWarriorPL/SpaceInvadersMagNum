@@ -15,7 +15,7 @@ def main(custom=False):
     global ui
     global fullscr
     system = GameSystem(fullscr)
-    ui = UserInterface(64)
+    ui = UserInterface(54)
     if isfile('leaderboard.txt'):
         with open('leaderboard.txt','r') as f:
             lb = f.readlines()
