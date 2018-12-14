@@ -25,7 +25,7 @@ class GameSystem:
         self.MYSTERYCHANCE = Secret.DefaultChance
         self.MYSTERY = None
         self.BONUSES = [ProfitAlwaysFire(150),ProfitSlowDown(150),ProfitExtraLife(),ProfitClearBoard()]
-        if BreakableCover.DefaultSize!=None:
+        if BreakableCover.DefaultScale!=None:
             self.BONUSES.append(ProfitRebuildBases())
         self.KEYMAP = KeyMapper([pygame.K_SPACE, pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN, pygame.K_RETURN, pygame.K_ESCAPE])
         self.IMAGES = {}
@@ -95,17 +95,19 @@ class GameSystem:
                 self.PROJECTILES.remove(p)
 
     def _buildBases(self):
-        self.BASES = [BreakableCover((bcx-BreakableCover.DefaultSize[0]/2,self.RESOLUTION[1]-Player.DefaultSize[1]*3.5)) for bcx in [self.RESOLUTION[0]/5,self.RESOLUTION[0]/2,self.RESOLUTION[0]*0.8]] if BreakableCover.DefaultSize!=None else []
+        self.BASES = [BreakableCover((bcx-BreakableCover.DefaultSize[0]/2,self.RESOLUTION[1]-Player.DefaultSize[1]*3.5)) for bcx in [self.RESOLUTION[0]/5,self.RESOLUTION[0]/2,self.RESOLUTION[0]*0.8]] if BreakableCover.DefaultScale!=None else []
 
     def _setupSizes(self):
         nscale = (self.GRID.YBounds[1]-self.GRID.YBounds[0]) / self.GRID.Rows
         fsc = lambda ds: ( int(nscale*ds[0]/40), int(nscale*ds[1]/40) )
         Projectile.DefaultSize = fsc(Projectile.DefaultSize)
         Player.DefaultSize = fsc(Player.DefaultSize)
+        BreakableCover.DefaultSize = fsc(BreakableCover.DefaultSize)
         Alien.DefaultSize = fsc(Alien.DefaultSize)
         Projectile.DefaultSpeed *= (self.GRID.YBounds[1]-self.GRID.YBounds[0]) / 540
-        EnemyCluster.DefaultSpeed *= (self.GRID.XBounds[1]-self.GRID.XBounds[0]) / 800
-        EnemyCluster.SpeedTarget *= (self.GRID.XBounds[1]-self.GRID.XBounds[0]) / 800
+        xspeedscale = (self.GRID.XBounds[1]-self.GRID.XBounds[0]) / 800
+        EnemyCluster.DefaultSpeed *= xspeedscale
+        EnemyCluster.SpeedTarget *= xspeedscale
 
 class AudioPlayer:
     AudioEnabled = True
@@ -380,14 +382,16 @@ class Player(Drawable):
 
 class BreakableCover:
     DefaultSize = (60,40)
+    DefaultScale = 1
     DefaultColor = (20,150,20)
 
     def __init__(self, pos):
-        pos = (pos[0], pos[1]-BreakableCover.DefaultSize[1]/2)
+        scaled = ( BreakableCover.DefaultSize[0]*BreakableCover.DefaultScale, BreakableCover.DefaultSize[1]*BreakableCover.DefaultScale )
+        pos = (pos[0], pos[1]-scaled[1]/2)
         self._position = pos
         self._bricksize = (1,1)
-        self._drawable = Drawable(pos,BreakableCover.DefaultSize,(0,0,0))
-        self.Bricks = [ [Drawable((x+pos[0],y+pos[1]),self._bricksize,BreakableCover.DefaultColor) for y in range(0,BreakableCover.DefaultSize[1],self._bricksize[1])] for x in range(0,BreakableCover.DefaultSize[0],self._bricksize[0]) ]
+        self._drawable = Drawable(pos,scaled,(0,0,0))
+        self.Bricks = [ [Drawable((x+pos[0],y+pos[1]),self._bricksize,BreakableCover.DefaultColor) for y in range(0,scaled[1],self._bricksize[1])] for x in range(0,scaled[0],self._bricksize[0]) ]
 
     def overlap(self, other, gs):
         return self._drawable.overlap(other, gs)

@@ -30,7 +30,7 @@ class MenuSystem:
         self.MOPS = OptionShifter(5)
         self.COPS = OptionShifter(6)
         self._trank = [['none','some','only'], ['yes', 'no'], ['without', 'small', 'medium', 'big'], ['low', 'standard', 'high', 'mad'], ['never', 'rarely', 'quite often', 'often']]
-        self._tvalue = [[0, 0.5, 1], [True, False], [None, (40,20), (60,40), (80,60)], [0.7, 1, 1.5, 2], [0, 0.01, 0.02, 0.04]]
+        self._tvalue = [[0, 0.5, 1], [True, False], [None, 0.6, 1, 2], [0.7, 1, 1.5, 2], [0, 0.01, 0.02, 0.04]]
 
     def _convertrank(self):
         copy = {}
@@ -62,7 +62,7 @@ class MenuSystem:
             sicore.Secret.DefaultChance = mods['mysteries']
             sicore.EnemyCluster.SpeedTarget *= mods['speed']
             sicore.EnemyCluster.DefaultSpeed *= mods['speed']
-            sicore.BreakableCover.DefaultSize = mods['bases']
+            sicore.BreakableCover.DefaultScale = mods['bases']
             sicore.Projectile.AlwaysHarmful = not mods['blank shots']
             sicore.Secret.BonusesChance = mods['bonuses']
             return True
