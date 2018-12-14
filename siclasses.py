@@ -389,7 +389,7 @@ class BreakableCover:
         scaled = ( BreakableCover.DefaultSize[0]*BreakableCover.DefaultScale, BreakableCover.DefaultSize[1]*BreakableCover.DefaultScale )
         pos = (pos[0], pos[1]-scaled[1]/2)
         self._position = pos
-        self._bricksize = (1,1)
+        self._bricksize = (2,2)
         self._drawable = Drawable(pos,scaled,(0,0,0))
         self.Bricks = [ [Drawable((x+pos[0],y+pos[1]),self._bricksize,BreakableCover.DefaultColor) for y in range(0,scaled[1],self._bricksize[1])] for x in range(0,scaled[0],self._bricksize[0]) ]
 
@@ -404,8 +404,8 @@ class BreakableCover:
 
     def _rmhit(self, d, gs):
         rp = self._relativepos(d, gs)
-        for x in range(rp[0], rp[0]+d.Size[0]):
-            for y in range(rp[1], rp[1]+d.Size[1]):
+        for x in range(rp[0]//self._bricksize[0], (rp[0]+d.Size[0])//self._bricksize[0]):
+            for y in range(rp[1]//self._bricksize[1], (rp[1]+d.Size[1])//self._bricksize[1]):
                 if x<0 or x>=len(self.Bricks) or self.Bricks[x]==None:
                     break
                 if y<0 or y>=len(self.Bricks[x]):
