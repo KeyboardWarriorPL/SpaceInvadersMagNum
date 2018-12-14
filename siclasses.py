@@ -540,7 +540,7 @@ class Genius(Alien):
 #BONUS system
 class Secret(Drawable):
     DefaultColor = (220,220,220)
-    DefaultChance = 0.005
+    DefaultChance = 0.01
     BonusesChance = 0.5
     DefaultImage = 'secret.png'
 
