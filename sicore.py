@@ -6,15 +6,15 @@ pygame.display.set_caption("MN's Space Invaders")
 from os.path import isfile
 from siclasses import *
 system = GameSystem()
-system._setupSizes()
 ui = UserInterface(64)
 fullscr = False
+rsl = (800,600)
 
 def main(custom=False):
     global system
     global ui
     global fullscr
-    system = GameSystem(fullscr)
+    system = GameSystem(fullscr, rsl)
     ui = UserInterface(54)
     if isfile('leaderboard.txt'):
         with open('leaderboard.txt','r') as f:
@@ -48,4 +48,5 @@ def main(custom=False):
         system.CLOCK.tick(system.FRAMERATE)
 
 if __name__=='__main__':
+    system._setupSizes()
     main()

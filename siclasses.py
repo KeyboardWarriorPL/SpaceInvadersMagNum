@@ -36,7 +36,7 @@ class GameSystem:
     def newFrame(self):
         if 'background.jpg' in self.IMAGES:
             sz = self.IMAGES['background.jpg'].get_size()
-            rt = self.RESOLUTION[1]/sz[1]
+            rt = self.RESOLUTION[0]/sz[0]
             tmpimg = pygame.transform.scale(self.IMAGES['background.jpg'], (int(sz[0]*rt), int(sz[1]*rt)))
             self.SCREEN.blit(tmpimg, (0,0))
         else:
@@ -103,6 +103,9 @@ class GameSystem:
         Projectile.DefaultSize = fsc(Projectile.DefaultSize)
         Player.DefaultSize = fsc(Player.DefaultSize)
         Alien.DefaultSize = fsc(Alien.DefaultSize)
+        Projectile.DefaultSpeed *= (self.GRID.YBounds[1]-self.GRID.YBounds[0]) / 540
+        EnemyCluster.DefaultSpeed *= (self.GRID.XBounds[1]-self.GRID.XBounds[0]) / 800
+        EnemyCluster.SpeedTarget *= (self.GRID.XBounds[1]-self.GRID.XBounds[0]) / 800
 
 class AudioPlayer:
     AudioEnabled = True
@@ -305,13 +308,14 @@ class EventPauser:
 
 #Missiles classes
 class Projectile(Drawable):
+    DefaultSpeed = 300
     DefaultSize = (4,12)
     DefaultColor = (200,0,0)
     AlwaysHarmful = True
     
     def __init__(self, start, plo=False):
         self.PlayerOwned = plo
-        self.Speed = 300
+        self.Speed = Projectile.DefaultSpeed
         self.Strength = 1
         self.Harmful = True
         self._y = start[1]

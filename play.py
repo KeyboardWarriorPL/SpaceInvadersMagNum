@@ -3,10 +3,6 @@ import sicore
 from os.path import isfile,join
 import sys
 
-if (len(sys.argv)>1 and sys.argv[1]=='fullscreen'):
-    sicore.fullscr = True
-    sicore.system = sicore.GameSystem(sicore.fullscr)
-
 class OptionShifter:
     DefaultFreezer = 2
 
@@ -220,4 +216,16 @@ def drawmenu(ops, pulse, soundstate=None):
         UI.showtext(sicore.system, e[0], e[1])
 
 if __name__=="__main__":
+    if len(sys.argv)>1:
+        if 'fullscreen' in sys.argv:
+            sicore.fullscr = True
+        for av in sys.argv[1:]:
+            if 'x' in av:
+                sicore.rsl = av.find('x')
+                sicore.rsl = ( int(av[:sicore.rsl]), int(av[sicore.rsl+1:]) )
+                if sicore.rsl[0]<800 or sicore.rsl[1]<600:
+                    print("Error: Minimal resolution is 800x600")
+                    sicore.rsl = (800,600)
+        sicore.system = sicore.GameSystem(sicore.fullscr,sicore.rsl)
+    sicore.system._setupSizes()
     main()

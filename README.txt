@@ -10,6 +10,7 @@ LUB (jeśli domyślny interpreter to Python3): python play.py
 Do uruchomienia wymagana jest instalacja Python 3.x.
 Python 2.x nie obsługuje użytego w grze kodu.
 Aby zagrać w trybie pełnoekranowym należy przy uruchomieniu podać argument: fullscreen ("python3 play.py fullscreen")
+Możliwe jest wymuszenie innej rozdzielczości poprzez podanie argumentu: SZERxWYS ("python3 play.py 1600x900")
 
 Pliki źródłowe:
 - play.py - gra z obsługą menu, pełnego ekranu i kustomizacją rozgrywki
